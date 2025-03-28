@@ -1,10 +1,9 @@
 import unittest
-from unittest.mock import patch, Mock
 from HorarioService import HorarioService
 import json
 
 
-class TestHorarioService(unittest.TestCase):
+class TestHorarioServiceInstanciamento(unittest.TestCase):
     #@patch('json.loads')
     #def test_consctructor(self,mock_json_loads):
     #Vi na aula do Vitor, mas não precisa, já que o método json.loads não é o que está sendo testado, mas sim a instancia.
@@ -18,15 +17,35 @@ class TestHorarioService(unittest.TestCase):
         }''' # ainda é uma string
         mock_instance = HorarioService(json_resposta)
 
-        self.assertIsInstance(mock_instance,HorarioService)
         self.assertEqual(mock_instance.nomeDoProfessor,"Prof. Fulano")
         self.assertEqual(mock_instance.horarioDeAtendimento,"10:00-12:00")
         self.assertEqual(mock_instance.periodo, "matutino")
-        self.assertEqual(mock_instance.sala,3)
-        self.assertNotEqual(mock_instance.sala,"3") #sala não pode ser uma string
         self.assertEqual(mock_instance.predio,"1")
         
-        self.assertEqual(mock_instance.selecionarPredio(),int(mock_instance.predio))
+
+    def test_consctructor_sucesso_instanciacao(self):
+        json_resposta = '''{ 
+            "nomeDoProfessor": "Prof. Fulano",
+            "horarioDeAtendimento": "10:00-12:00",
+            "periodo": "matutino",
+            "sala": "3",
+            "predio": "1"
+        }'''
+        mock_instance = HorarioService(json_resposta)
+        self.assertIsInstance(mock_instance,HorarioService)
+    
+    def test_consctructor_sala_int(self):
+        json_resposta = '''{ 
+            "nomeDoProfessor": "Prof. Fulano",
+            "horarioDeAtendimento": "10:00-12:00",
+            "periodo": "matutino",
+            "sala": "3",
+            "predio": "1"
+        }'''
+        mock_instance = HorarioService(json_resposta)
+        self.assertIsInstance(mock_instance.sala,int)
+        self.assertEqual(mock_instance.sala,3)
+        self.assertNotEqual(mock_instance.sala,"3") #sala não pode ser uma string
 
     def test_consctructor_Chris(self):
         json_resposta = '''{ 
@@ -73,6 +92,18 @@ class TestHorarioService(unittest.TestCase):
         self.assertNotEqual(mock_instance.predio,mock_instance2.predio)
         self.assertNotEqual(mock_instance.selecionarPredio(),mock_instance2.selecionarPredio())
 
+    def test_consctructor_selecionarPredio(self):
+        json_resposta = '''{ 
+            "nomeDoProfessor": "Prof. Fulano",
+            "horarioDeAtendimento": "10:00-12:00",
+            "periodo": "matutino",
+            "sala": "3",
+            "predio": "1"
+        }'''
+        mock_instance = HorarioService(json_resposta)
+
+        self.assertEqual(mock_instance.selecionarPredio(),int(mock_instance.predio))
+
     def test_sala_limite_inferior(self):
         json_resposta = '''{ 
             "nomeDoProfessor": "Prof. Fulano",
@@ -100,7 +131,8 @@ class TestHorarioService(unittest.TestCase):
         self.assertEqual(mock_instance.predioEscolhido,6)
         self.assertNotEqual(mock_instance.sala,"30") #sala não pode ser uma string
 
-class TestHorarioServiceNegativo(unittest.TestCase):
+    ######## Testes de erro
+
     def test_sala_negativa(self):
         json_resposta = '''{ 
             "nomeDoProfessor": "Prof. Fulano",
@@ -123,15 +155,58 @@ class TestHorarioServiceNegativo(unittest.TestCase):
         with self.assertRaises(ValueError):
             mock_instance = HorarioService(json_resposta)
 
-    def test_dado_faltante(self):
+    def test_dado_faltante_horario(self):
         json_resposta = '''{ 
             "nomeDoProfessor": "Prof. Fulano",
-            "horarioDeAtendimento": "28:00-12:00",
-            "periodo": "matutino"
+            "periodo": "matutino",
+            "sala": "29",
+            "predio": "6"
         }'''
         
         with self.assertRaises(KeyError):
             mock_instance = HorarioService(json_resposta)
+
+    def test_dado_faltante_nome(self):
+        json_resposta = '''{ 
+            "horarioDeAtendimento": "10:00-12:00",
+            "periodo": "matutino",
+            "sala": "29",
+            "predio": "6"
+        }'''
+        with self.assertRaises(KeyError):
+            mock_instance = HorarioService(json_resposta)
+
+    def test_dado_faltante_periodo(self):
+        json_resposta = '''{ 
+            "nomeDoProfessor": "Prof. Fulano",
+            "horarioDeAtendimento": "10:00-12:00",
+            "sala": "29",
+            "predio": "6"
+        }'''
+        with self.assertRaises(KeyError):
+            mock_instance = HorarioService(json_resposta)
+
+    def test_dado_faltante_sala(self):
+        json_resposta = '''{ 
+            "nomeDoProfessor": "Prof. Fulano",
+            "horarioDeAtendimento": "10:00-12:00",
+            "periodo": "matutino",
+            "predio": "6"
+        }'''
+        with self.assertRaises(KeyError):
+            mock_instance = HorarioService(json_resposta)
+
+    def test_dado_faltante_predio(self):
+        json_resposta = '''{ 
+            "nomeDoProfessor": "Prof. Fulano",
+            "horarioDeAtendimento": "10:00-12:00",
+            "periodo": "matutino",
+            "sala": "3"
+        }'''
+        with self.assertRaises(KeyError):
+            mock_instance = HorarioService(json_resposta)
+    
+    
             
     
     def test_nome_invalido(self):
@@ -161,6 +236,87 @@ class TestHorarioServiceNegativo(unittest.TestCase):
             }'''
         with self.assertRaises(json.decoder.JSONDecodeError):
             mock_instance = HorarioService(json_resposta)
+
+    def test_horario_invalido_excedente(self):
+        json_resposta = '''{ 
+            "nomeDoProfessor": "Prof. Fulano",
+            "horarioDeAtendimento": "101:00-12:00",
+            "periodo": "matutino",
+            "sala": "3",
+            "predio": "1"
+        }'''
+        with self.assertRaises(ValueError):
+            mock_instance = HorarioService(json_resposta)
+    
+    def test_horario_invalido_insuficiente(self):
+        json_resposta = '''{ 
+            "nomeDoProfessor": "Prof. Fulano",
+            "horarioDeAtendimento": "1:0-12:0",
+            "periodo": "matutino",
+            "sala": "3",
+            "predio": "1"
+        }'''
+        with self.assertRaises(ValueError):
+            mock_instance = HorarioService(json_resposta)
+
+    def test_horario_invalido_mal_formatado(self):
+        json_resposta = '''{ 
+            "nomeDoProfessor": "Prof. Fulano",
+            "horarioDeAtendimento": "11:00 12:00",
+            "periodo": "matutino",
+            "sala": "3",
+            "predio": "1"
+        }'''
+        with self.assertRaises(ValueError):
+            mock_instance = HorarioService(json_resposta)
+
+    def test_horario_invalido_mal_formatado(self):
+        json_resposta = '''{ 
+            "nomeDoProfessor": "Prof. Fulano",
+            "horarioDeAtendimento": "11:a0-12:00",
+            "periodo": "matutino",
+            "sala": "3",
+            "predio": "1"
+        }'''
+        with self.assertRaises(ValueError):
+            mock_instance = HorarioService(json_resposta)
+
+class TestMarcarHorario(unittest.TestCase):
+
+
+    def test_marcar_horario_valido(self):
+        json_resposta = '''{ 
+            "nomeDoProfessor": "Prof. Fulano",
+            "horarioDeAtendimento": "08:00-12:00",
+            "periodo": "matutino",
+            "sala": "3",
+            "predio": "1"
+        }'''
+        mock_instance = HorarioService(json_resposta)
+        self.assertEqual(mock_instance.marcarHorario("11:00"), print("Horário 11:00 marcado com sucesso!"))
+    def test_marcar_horario_invalido(self):
+        json_resposta = '''{ 
+            "nomeDoProfessor": "Prof. Fulano",
+            "horarioDeAtendimento": "10:00-12:00",
+            "periodo": "matutino",
+            "sala": "3",
+            "predio": "1"
+        }'''
+        mock_instance = HorarioService(json_resposta)
+        with self.assertRaises(ValueError):
+            mock_instance.marcarHorario("10:00-12:00")
+
+    def test_marcar_horario_invalido2(self):
+        json_resposta = '''{ 
+            "nomeDoProfessor": "Prof. Fulano",
+            "horarioDeAtendimento": "10:00-12:00",
+            "periodo": "matutino",
+            "sala": "3",
+            "predio": "1"
+        }'''
+        mock_instance = HorarioService(json_resposta)
+        with self.assertRaises(ValueError):
+            mock_instance.marcarHorario("10-12")
 
 if __name__ == "__main__":
     unittest.main()
