@@ -1,41 +1,54 @@
 import json
+from unittest.mock import patch, MagicMock, Mock
+from math import ceil as mathCeil
 
-#classe a ser mockada, pois não existe o arquivo json
-class HorarioAtendimento:
+class HorarioService:
 
-    json_data = {
-  "nomeDoProfessor": "<nome_do_professor>",
-  "horarioDeAtendimento": "<horario_de_atendimento>",
-  "periodo": "<integral_ou_noturno>",
-  "sala": "<sala_de_atendimento>",
-  "predio": [
-    "1",
-    "2",
-    "3",
-    "4",
-    "6"
-  ]
-}
+    def __init__(self, string_json):
+        data = json.loads(string_json)
 
-    def __init__(self):
-        self.data = json.loads(json_data)
+        try:
+            self.nomeDoProfessor = data['nomeDoProfessor']
+            if not isinstance(self.nomeDoProfessor, str) or len(self.nomeDoProfessor) < 3:
+                raise ValueError("Nome do professor deve ser uma string com mais de 2 caracteres.")
+        except ValueError as e:
+            raise ValueError(f"nome de professor invalido {e}")
+        self.horarioDeAtendimento = data['horarioDeAtendimento'] 
+        self.periodo = data.get('periodo')
+        try:
+            self.sala = int(data['sala'])
+            if self.sala < 1 or self.sala > 30:
+                raise ValueError("Sala deve ser um número entre 1 e 30.")
+        except (ValueError) as e:
+            raise ValueError(f"Erro ao processar a sala: {e}")
+        self.predio = data['predio']
 
-    def get_predio(self):
-        sala = self.data['sala']
-        if (sala / 5) <= 1:
-            return "Predio 1"
-        elif (sala / 5) <= 2:
-            return "Predio 2"
-        elif (sala / 5) <= 3:
-            return "Predio 3"
-        elif (sala / 5) <= 4:
-            return "Predio 4"
-        elif (sala / 5) <= 5:
-            return "Predio 5"
-        elif (sala / 5) <= 6:
-            return "Predio 6"
-        pass
+        self.predioEscolhido = self.selecionarPredio()
 
 
-    def __str__(self):
-        return f"{self.dia} - {self.inicio} até {self.fim}"
+    def selecionarPredio(self):
+        PredioEscolhido = mathCeil(int(self.sala) / 5)
+        
+        return PredioEscolhido
+    
+
+                
+
+    # def get_predio(self):
+    #     sala = int(self.data['sala'])
+        
+    #     if (sala / 5) <= 1:
+    #         return "Predio 1"
+    #     elif (sala / 5) <= 2:
+    #         return "Predio 2"
+    #     elif (sala / 5) <= 3:
+    #         return "Predio 3"
+    #     elif (sala / 5) <= 4:
+    #         return "Predio 4"
+    #     elif (sala / 5) <= 5:
+    #         return "Predio 5"
+    #     elif (sala / 5) <= 6:
+    #         return "Predio 6"
+    #     pass
+    #chatgpt recomendou essa forma para simplificar o código, requer biblioteca math
+    
